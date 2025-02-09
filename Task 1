@@ -1,0 +1,25 @@
+WITH trip_data AS (
+  SELECT
+    EXTRACT(DAYOFWEEK FROM trip_start_timestamp) AS day_of_week,
+    trip_seconds
+  FROM
+    `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+  WHERE
+    trip_seconds IS NOT NULL
+    AND EXTRACT(DAYOFWEEK FROM trip_start_timestamp) IN(2,7)
+)
+SELECT
+  CASE
+    WHEN day_of_week = 2 THEN 'Monday'
+    WHEN day_of_week = 7 THEN 'Saturday'
+  END AS day,
+  AVG(trip_seconds) AS avg_trip_seconds,
+  APPROX_QUANTILES(trip_seconds, 2)[SAFE_OFFSET(1)] AS median_trip_seconds,
+  STDDEV(trip_seconds) AS stddev_trip_seconds
+FROM
+  trip_data
+GROUP BY
+  day_of_week
+ORDER BY
+  day_of_week;
+--Hilal Fazri
